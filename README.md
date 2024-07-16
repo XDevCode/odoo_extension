@@ -91,15 +91,6 @@ Puedes instalar la extensión empaquetada en VS Code de dos maneras:
    - Crear Plantilla
 4. Sigue las instrucciones en pantalla para completar la acción seleccionada.
 
-## Contribuir
-
-Si deseas contribuir a este proyecto, por favor sigue los pasos a continuación:
-
-1. Haz un fork del repositorio.
-2. Crea una nueva rama (`git checkout -b feature/nueva-funcionalidad`).
-3. Realiza tus cambios y haz commit (`git commit -am 'Agrega nueva funcionalidad'`).
-4. Sube la rama (`git push origin feature/nueva-funcionalidad`).
-5. Abre un Pull Request.
 
 ## Licencia
 

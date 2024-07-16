@@ -1,0 +1,74 @@
+{
+  "name": "devodoo",
+  "displayName": "extend_odoo",
+  "description": "help odoo dev",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.91.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:devodoo.helloWorld",
+    "onCommand:extension.createOdooModule"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "devodoo.helloWorld",
+        "title": "Hello World"
+      },
+      {
+        "command": "extension.createOdooModule",
+        "title": "Crear Módulo Odoo"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "extension.createOdooModule",
+          "group": "navigation",
+          "when": "explorerResourceIsFolder"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "Odoo Configuration",
+      "properties": {
+        "odoo.odooBinPath": {
+          "type": "string",
+          "default": "",
+          "description": "Ruta del archivo odoo-bin"
+        },
+        "odoo.pythonPath": {
+          "type": "string",
+          "default": "",
+          "description": "Ruta del ejecutable de Python"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.7",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.91.0",
+    "@types/which": "^3.0.4",
+    "@typescript-eslint/eslint-plugin": "^7.14.1",
+    "@typescript-eslint/parser": "^7.11.0",
+    "@vscode/test-cli": "^0.0.9",
+    "@vscode/test-electron": "^2.4.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5"
+  }
+}

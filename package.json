@@ -3,6 +3,7 @@
   "displayName": "extend_odoo",
   "description": "help odoo dev",
   "version": "0.0.1",
+  "publisher": "DarkDev",
   "engines": {
     "vscode": "^1.91.0"
   },
@@ -10,30 +11,88 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:devodoo.helloWorld",
-    "onCommand:extension.createOdooModule"
+    "onCommand:devodoo.createOdooModule",
+    "onCommand:devodoo.createBaseModel",
+    "onCommand:devodoo.createAbstractModel",
+    "onCommand:devodoo.createTransientModel",
+    "onCommand:devodoo.createView",
+    "onCommand:devodoo.createTemplate"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "devodoo.helloWorld",
-        "title": "Hello World"
+        "command": "devodoo.createOdooModule",
+        "title": "Crear Módulo"
       },
       {
-        "command": "extension.createOdooModule",
-        "title": "Crear Módulo Odoo"
+        "command": "devodoo.createBaseModel",
+        "title": "Crear Modelo Base"
+      },
+      {
+        "command": "devodoo.createAbstractModel",
+        "title": "Crear Modelo Abstracto"
+      },
+      {
+        "command": "devodoo.createTransientModel",
+        "title": "Crear Modelo Transitorio"
+      },
+      {
+        "command": "devodoo.createView",
+        "title": "Crear Vista"
+      },
+      {
+        "command": "devodoo.createTemplate",
+        "title": "Crear Plantilla"
       }
     ],
     "menus": {
       "explorer/context": [
         {
-          "command": "extension.createOdooModule",
+          "submenu": "devodoo.odooSubmenu",
           "group": "navigation",
+          "when": "explorerResourceIsFolder"
+        }
+      ],
+      "devodoo.odooSubmenu": [
+        {
+          "command": "devodoo.createOdooModule",
+          "group": "1_modulos",
+          "when": "explorerResourceIsFolder"
+        },
+        {
+          "command": "devodoo.createBaseModel",
+          "group": "2_modelos",
+          "when": "explorerResourceIsFolder"
+        },
+        {
+          "command": "devodoo.createAbstractModel",
+          "group": "2_modelos",
+          "when": "explorerResourceIsFolder"
+        },
+        {
+          "command": "devodoo.createTransientModel",
+          "group": "2_modelos",
+          "when": "explorerResourceIsFolder"
+        },
+        {
+          "command": "devodoo.createView",
+          "group": "3_vistas",
+          "when": "explorerResourceIsFolder"
+        },
+        {
+          "command": "devodoo.createTemplate",
+          "group": "4_plantillas",
           "when": "explorerResourceIsFolder"
         }
       ]
     },
+    "submenus": [
+      {
+        "label": "Odoo",
+        "id": "devodoo.odooSubmenu"
+      }
+    ],
     "configuration": {
       "type": "object",
       "title": "Odoo Configuration",
@@ -61,14 +120,17 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.7",
-    "@types/node": "20.x",
-    "@types/vscode": "^1.91.0",
+    "@types/node": "^20.14.10",
     "@types/which": "^3.0.4",
     "@typescript-eslint/eslint-plugin": "^7.14.1",
     "@typescript-eslint/parser": "^7.11.0",
     "@vscode/test-cli": "^0.0.9",
     "@vscode/test-electron": "^2.4.0",
     "eslint": "^8.57.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vscode": "^1.1.37"
+  },
+  "dependencies": {
+    "json5": "^2.2.3"
   }
 }

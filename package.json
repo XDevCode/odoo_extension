@@ -11,12 +11,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:devodoo.createOdooModule",
-    "onCommand:devodoo.createBaseModel",
-    "onCommand:devodoo.createAbstractModel",
-    "onCommand:devodoo.createTransientModel",
-    "onCommand:devodoo.createView",
-    "onCommand:devodoo.createTemplate"
+    "*"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -44,6 +39,18 @@
       {
         "command": "devodoo.createTemplate",
         "title": "Crear Plantilla"
+      },
+      {
+        "command": "devodoo.toggleOdooProject",
+        "title": "Toggle Odoo Project"
+      },
+      {
+        "command": "devodoo.showMenu",
+        "title": "Show Odoo Menu"
+      },
+      {
+        "command": "devodoo.runOdoo",
+        "title": "Run Odoo"
       }
     ],
     "menus": {
@@ -106,9 +113,21 @@
           "type": "string",
           "default": "",
           "description": "Ruta del ejecutable de Python"
+        },
+        "odoo.configPath": {
+          "type": "string",
+          "default": "",
+          "description": "Ruta del archivo de configuración odoo.config"
         }
       }
-    }
+    },
+    "keybindings": [
+      {
+        "command": "devodoo.handleF5",
+        "key": "F5",
+        "when": "editorTextFocus"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

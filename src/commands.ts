@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getPythonDir, getOdooBinPath, createModelFile, updateInitFile } from './utils';
+import { getPythonDir, getOdooBinPath, createModelFile, updateInitFile, getConfigPath } from './utils';
+import { odooStatusBarItem } from './statusBar';
 
 export function registerCommands(context: vscode.ExtensionContext) {
   let disposableCreateOdooModule = vscode.commands.registerCommand('devodoo.createOdooModule', async (uri: vscode.Uri) => {
@@ -34,6 +35,40 @@ export function registerCommands(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage('Odoo-bin path is missing!');
       }
       console.error('Module name, Python directory, or odoo-bin path is missing!');
+    }
+  });
+
+  let disposableRunOdoo = vscode.commands.registerCommand('devodoo.runOdoo', async () => {
+    const pythonDir = await getPythonDir();
+    const odooBinPath = await getOdooBinPath();
+    const configPath = await getConfigPath();
+
+    if (pythonDir && odooBinPath && configPath) {
+      const command = `"${pythonDir}/python" "${odooBinPath}" -c "${configPath}"`;
+      const terminal = vscode.window.createTerminal('Odoo');
+      terminal.sendText(command);
+      terminal.show();
+    } else {
+      if (!pythonDir) {
+        vscode.window.showErrorMessage('Python directory is missing!');
+      }
+      if (!odooBinPath) {
+        vscode.window.showErrorMessage('Odoo-bin path is missing!');
+      }
+      if (!configPath) {
+        vscode.window.showErrorMessage('Config path is missing!');
+      }
+      console.error('Python directory, odoo-bin path, or config path is missing!');
+    }
+  });
+
+  // Manejar el comportamiento de F5 basado en el estado del StatusBarItem
+  let disposableHandleF5 = vscode.commands.registerCommand('devodoo.handleF5', async () => {
+    const isOdooEnabled = odooStatusBarItem.text.includes('$(check)');
+    if (isOdooEnabled) {
+      await vscode.commands.executeCommand('devodoo.runOdoo');
+    } else {
+      await vscode.commands.executeCommand('workbench.action.debug.start');
     }
   });
 
@@ -83,6 +118,8 @@ export function registerCommands(context: vscode.ExtensionContext) {
   });
 
   context.subscriptions.push(disposableCreateOdooModule);
+  context.subscriptions.push(disposableRunOdoo);
+  context.subscriptions.push(disposableHandleF5);
   context.subscriptions.push(disposableCreateBaseModel);
   context.subscriptions.push(disposableCreateAbstractModel);
   context.subscriptions.push(disposableCreateTransientModel);

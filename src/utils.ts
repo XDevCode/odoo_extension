@@ -2,6 +2,18 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 
+export async function getConfigPath(): Promise<string | undefined> {
+  let configPath = vscode.workspace.getConfiguration().get<string>('odoo.configPath');
+  if (!configPath) {
+    configPath = await vscode.window.showInputBox({ prompt: 'Enter the path to the odoo.config file' });
+    if (configPath) {
+      await vscode.workspace.getConfiguration().update('odoo.configPath', configPath, vscode.ConfigurationTarget.Global);
+    }
+  }
+  return configPath;
+}
+
+
 export async function getPythonDir(): Promise<string | undefined> {
   let pythonDir = vscode.workspace.getConfiguration().get<string>('odoo.pythonPath');
   if (!pythonDir) {

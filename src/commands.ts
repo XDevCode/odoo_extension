@@ -44,10 +44,17 @@ export function registerCommands(context: vscode.ExtensionContext) {
     const configPath = await getConfigPath();
 
     if (pythonDir && odooBinPath && configPath) {
-      const command = `"${pythonDir}/python" "${odooBinPath}" -c "${configPath}"`;
+
+      let command: string;
+    
+      // const command = `& "${pythonDir}/python" "${odooBinPath}" -c "${configPath}"`;
+      command = `"${pythonDir}/activate" & python "${odooBinPath}" -c "${configPath}"`;
+
+
       const terminal = vscode.window.createTerminal('Odoo');
       terminal.sendText(command);
       terminal.show();
+
     } else {
       if (!pythonDir) {
         vscode.window.showErrorMessage('Python directory is missing!');

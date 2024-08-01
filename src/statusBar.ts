@@ -35,3 +35,7 @@ function updateOdooStatusBar(enabled: boolean) {
   }
   odooStatusBarItem.show();
 }
+
+export function isOdooEnabled(): boolean {
+  return odooStatusBarItem.text.includes('$(check)');
+}

@@ -51,6 +51,10 @@
       {
         "command": "devodoo.runOdoo",
         "title": "Run Odoo"
+      },
+      {
+        "command": "devodoo.updateModules",
+        "title": "Update Odoo Modules"
       }
     ],
     "menus": {
@@ -125,6 +129,11 @@
       {
         "command": "devodoo.handleF5",
         "key": "F5",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devodoo.updateModules",
+        "key": "ctrl+shift+u",
         "when": "editorTextFocus"
       }
     ]

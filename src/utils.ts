@@ -2,39 +2,99 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 
-export async function getConfigPath(): Promise<string | undefined> {
-  let configPath = vscode.workspace.getConfiguration().get<string>('odoo.configPath');
-  if (!configPath) {
-    configPath = await vscode.window.showInputBox({ prompt: 'Enter the path to the odoo.config file' });
-    if (configPath) {
-      await vscode.workspace.getConfiguration().update('odoo.configPath', configPath, vscode.ConfigurationTarget.Global);
+async function getPath(configKey: string, dialogOptions: vscode.OpenDialogOptions): Promise<string | undefined> {
+  let fullPath = vscode.workspace.getConfiguration().get<string>(configKey);
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+
+  if (fullPath && workspaceFolder) {
+    return path.relative(workspaceFolder, fullPath);
+  } else {
+    const uri = await vscode.window.showOpenDialog(dialogOptions);
+
+    if (uri && uri[0] && workspaceFolder) {
+      fullPath = uri[0].fsPath;
+      await vscode.workspace.getConfiguration().update(configKey, fullPath, vscode.ConfigurationTarget.Global);
+      return path.relative(workspaceFolder, fullPath);
     }
   }
-  return configPath;
+  return undefined;
 }
 
+export async function getConfigPath(): Promise<string | undefined> {
+  const dialogOptions: vscode.OpenDialogOptions = {
+    canSelectFiles: true,
+    canSelectFolders: false,
+    canSelectMany: false,
+    openLabel: 'Select Odoo Config File'
+  };
+  return getPath('odoo.configPath', dialogOptions);
+}
 
 export async function getPythonDir(): Promise<string | undefined> {
-  let pythonDir = vscode.workspace.getConfiguration().get<string>('odoo.pythonPath');
-  if (!pythonDir) {
-    pythonDir = await vscode.window.showInputBox({ prompt: 'Enter the directory of the Python environment' });
-    if (pythonDir) {
-      await vscode.workspace.getConfiguration().update('odoo.pythonPath', pythonDir, vscode.ConfigurationTarget.Global);
-    }
-  }
-  return pythonDir;
+  const dialogOptions: vscode.OpenDialogOptions = {
+    canSelectFiles: false,
+    canSelectFolders: true,
+    canSelectMany: false,
+    openLabel: 'Select Python Directory'
+  };
+  return getPath('odoo.pythonPath', dialogOptions);
 }
 
 export async function getOdooBinPath(): Promise<string | undefined> {
-  let odooBinPath = vscode.workspace.getConfiguration().get<string>('odoo.odooBinPath');
-  if (!odooBinPath) {
-    odooBinPath = await vscode.window.showInputBox({ prompt: 'Enter the odoo-bin path' });
-    if (odooBinPath) {
-      await vscode.workspace.getConfiguration().update('odoo.odooBinPath', odooBinPath, vscode.ConfigurationTarget.Global);
+  const dialogOptions: vscode.OpenDialogOptions = {
+    canSelectFiles: true,
+    canSelectFolders: false,
+    canSelectMany: false,
+    openLabel: 'Select Odoo Bin File'
+  };
+  return getPath('odoo.odooBinPath', dialogOptions);
+}
+
+export async function getModules(): Promise<string[]> {
+  const configPath = await getConfigPath();
+  const odooBin    = await getOdooBinPath();
+  if (!configPath) {
+    vscode.window.showErrorMessage('Config path is missing!');
+    return [];
+  }
+
+  if (!odooBin ) {
+    vscode.window.showErrorMessage('odoo-bin path is missing!');
+    return [];
+  }
+
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (!workspaceFolder) {
+    vscode.window.showErrorMessage('Workspace folder is missing!');
+    return [];
+  }
+
+  const odooBin_  = path.join(workspaceFolder, odooBin);
+
+
+  const fullConfigPath = path.join(workspaceFolder, configPath);
+  const configContent = fs.readFileSync(fullConfigPath, 'utf-8');
+  const addonsPaths = configContent.match(/addons_path\s*=\s*([^\n]*)/);
+  if (!addonsPaths) {
+    vscode.window.showErrorMessage('Addons path is not specified in the config file!');
+    return [];
+  }
+
+  const addonsDirectories = addonsPaths[1].split(',').map(dir => dir.trim());
+  const modules: string[] = [];
+
+  for (const dir of addonsDirectories) {
+    const fullPath = path.resolve(path.dirname(odooBin_), dir);
+    if (fs.existsSync(fullPath)) {
+      const dirModules = fs.readdirSync(fullPath).filter(file => fs.statSync(path.join(fullPath, file)).isDirectory());
+      modules.push(...dirModules);
     }
   }
-  return odooBinPath;
+
+  return modules;
 }
+
+
 
 export async function createModelFile(uri: vscode.Uri, modelName: string, modelType: 'base' | 'abstract' | 'transient') {
   const modelTemplates: { [key: string]: string } = {

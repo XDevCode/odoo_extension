@@ -16,6 +16,7 @@
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
+
       {
         "command": "devodoo.createOdooModule",
         "title": "Crear Módulo"
@@ -55,6 +56,14 @@
       {
         "command": "devodoo.updateModules",
         "title": "Update Odoo Modules"
+      },
+      {
+        "command": "devodoo.installModules",
+        "title": "Update Odoo Modules"
+      },
+      {
+        "command": "devodoo.debugOdoo",
+        "title": "Debug Odoo"
       }
     ],
     "menus": {
@@ -135,7 +144,18 @@
         "command": "devodoo.updateModules",
         "key": "ctrl+shift+u",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "devodoo.installModules",
+        "key": "ctrl+shift+i",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devodoo.debugOdoo",
+        "key": "ctrl+shift+d",
+        "when": "editorTextFocus"
       }
+      
     ]
   },
   "scripts": {

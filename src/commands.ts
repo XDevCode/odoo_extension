@@ -7,13 +7,14 @@ import { odooStatusBarItem, isOdooEnabled } from './statusBar';
 
 export function registerCommands(context: vscode.ExtensionContext) {
   let disposableCreateOdooModule = vscode.commands.registerCommand('devodoo.createOdooModule', async (uri: vscode.Uri) => {
-    const moduleName = await vscode.window.showInputBox({ prompt: 'Enter Module Name' });
-    const pythonDir = await getPythonDir();
-    const odooBinPath = await getOdooBinPath();
-    const addonsPath = uri.fsPath;
+    const moduleName  = await vscode.window.showInputBox({ prompt: 'Enter Module Name' });
+    // const pythonDir   = await getPythonDir();
+    const pythonDir   = vscode.workspace.getConfiguration().get<string>('odoo.pythonPath');
+    const odooBinPath = vscode.workspace.getConfiguration().get<string>('odoo.odooBinPath');
+    const addonsPath  = uri.fsPath;
 
     if (moduleName && pythonDir && odooBinPath) {
-      const command = `"${pythonDir}/python" "${odooBinPath}" scaffold ${moduleName} "${addonsPath}"`;
+      const command = `"${pythonDir}\\python"  "${odooBinPath}"  scaffold ${moduleName} "${addonsPath}"`;
       console.log(`Executing command: ${command}`);
       cp.exec(command, (err, stdout, stderr) => {
         if (err) {
@@ -39,16 +40,20 @@ export function registerCommands(context: vscode.ExtensionContext) {
   });
 
   let disposableRunOdoo = vscode.commands.registerCommand('devodoo.runOdoo', async () => {
-    const pythonDir = await getPythonDir();
-    const odooBinPath = await getOdooBinPath();
-    const configPath = await getConfigPath();
+    const pythonDir    = await getPythonDir();
+    const odooBinPath  = vscode.workspace.getConfiguration().get<string>('odoo.odooBinPath');
+    // const configPath = await getConfigPath();
+    const configPath   = vscode.workspace.getConfiguration().get<string>('odoo.configPath');
 
     if (pythonDir && odooBinPath && configPath) {
+
+      let odoo_path  = path.dirname(odooBinPath);
+    
 
       let command: string;
     
       // const command = `& "${pythonDir}/python" "${odooBinPath}" -c "${configPath}"`;
-      command = `".\\${pythonDir}\\activate" & python "${odooBinPath}" -c "${configPath}"`;
+      command = `".\\${pythonDir}\\activate" && cd "${odoo_path}" && python odoo-bin -c "${configPath}"`;
 
 
       const terminal = vscode.window.createTerminal('Odoo');
@@ -140,12 +145,13 @@ export function registerCommands(context: vscode.ExtensionContext) {
 
     if (selectedModules && selectedModules.length > 0) {
       const pythonDir    = await getPythonDir();
-      const odooBinPath  = await getOdooBinPath();
-      const configPath   = await getConfigPath();
+      const odooBinPath  = vscode.workspace.getConfiguration().get<string>('odoo.odooBinPath');
+      const configPath   = vscode.workspace.getConfiguration().get<string>('odoo.configPath');
 
       if (pythonDir && odooBinPath && configPath) {
-        const command = `".\\${pythonDir}\\activate" & python "${odooBinPath}" -c "${configPath}" -u ${selectedModules.join(',')}`;
 
+        let odoo_path  = path.dirname(odooBinPath);
+        const command  = `".\\${pythonDir}\\activate" && cd "${odoo_path}" && python odoo-bin -c "${configPath}"-u ${selectedModules.join(',')} -dev`;
         const terminal = vscode.window.createTerminal('Update Odoo Modules');
         terminal.sendText(command);
         terminal.show();
@@ -166,6 +172,90 @@ export function registerCommands(context: vscode.ExtensionContext) {
     }
   });
 
+  let disposableInstallModules = vscode.commands.registerCommand('devodoo.installModules', async () => {
+    
+    if (!isOdooEnabled()) {
+      vscode.window.showErrorMessage('Odoo mode is disabled!');
+      return;
+    }
+
+    const modules = await getModules();
+    const selectedModules = await vscode.window.showQuickPick(modules, {
+      canPickMany: true,
+      placeHolder: 'Select modules to installer'
+    });
+
+    if (selectedModules && selectedModules.length > 0) {
+      const pythonDir    = await getPythonDir();
+      const odooBinPath  = vscode.workspace.getConfiguration().get<string>('odoo.odooBinPath');
+      const configPath   = vscode.workspace.getConfiguration().get<string>('odoo.configPath');
+
+      if (pythonDir && odooBinPath && configPath) {
+
+        let odoo_path  = path.dirname(odooBinPath);
+        const command  = `".\\${pythonDir}\\activate" && cd "${odoo_path}" && python odoo-bin -c "${configPath}"-i ${selectedModules.join(',')}`;
+        const terminal = vscode.window.createTerminal('Update Odoo Modules');
+        terminal.sendText(command);
+        terminal.show();
+      } else {
+        if (!pythonDir) {
+          vscode.window.showErrorMessage('Python directory is missing!');
+        }
+        if (!odooBinPath) {
+          vscode.window.showErrorMessage('Odoo-bin path is missing!');
+        }
+        if (!configPath) {
+          vscode.window.showErrorMessage('Config path is missing!');
+        }
+        console.error('Python directory, odoo-bin path, or config path is missing!');
+      }
+    } else {
+      vscode.window.showInformationMessage('No modules selected for installer.');
+    }
+  });
+
+  let disposableDebugOdoo = vscode.commands.registerCommand('devodoo.debugOdoo', async () => {
+    const pythonDir = vscode.workspace.getConfiguration().get<string>('odoo.pythonPath');
+    const odooBinPath = vscode.workspace.getConfiguration().get<string>('odoo.odooBinPath');
+    const configPath = vscode.workspace.getConfiguration().get<string>('odoo.configPath');
+
+    if (pythonDir && odooBinPath && configPath) {
+      const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      if (!workspaceFolder) {
+        vscode.window.showErrorMessage('Workspace folder is missing!');
+        return;
+      }
+
+      const debugConfig: vscode.DebugConfiguration = {
+        name: "Debug Odoo",
+        type: "python",
+        request: "launch",
+        program: odooBinPath,
+        args: [
+          "-c",
+          configPath,
+          "--dev=all"
+        ],
+        console: "integratedTerminal",
+        justMyCode: false
+      };
+
+      vscode.debug.startDebugging(undefined, debugConfig);
+    } else {
+      if (!pythonDir) {
+        vscode.window.showErrorMessage('Python directory is missing!');
+      }
+      if (!odooBinPath) {
+        vscode.window.showErrorMessage('Odoo-bin path is missing!');
+      }
+      if (!configPath) {
+        vscode.window.showErrorMessage('Config path is missing!');
+      }
+      console.error('Python directory, odoo-bin path, or config path is missing!');
+    }
+  });
+
+  context.subscriptions.push(disposableDebugOdoo);
   context.subscriptions.push(disposableCreateOdooModule);
   context.subscriptions.push(disposableRunOdoo);
   context.subscriptions.push(disposableHandleF5);
@@ -174,6 +264,7 @@ export function registerCommands(context: vscode.ExtensionContext) {
   context.subscriptions.push(disposableCreateTransientModel);
   context.subscriptions.push(disposableCreateView);
   context.subscriptions.push(disposableCreateTemplate);
+  context.subscriptions.push(disposableInstallModules);
 }
 
 async function createViewFile(uri: vscode.Uri, viewName: string, type: 'view' | 'template') {
